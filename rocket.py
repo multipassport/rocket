@@ -21,12 +21,18 @@ async def blink(canvas, row, column, symbol='*'):
 def draw(canvas):
     row, column = (5, 20)
     canvas.border()
-    star_coroutine = blink(canvas, row, column, '*')
+    coroutines = [blink(canvas, row, column + index) for index in range(5)]
     while True:
-        star_coroutine.send(None)
-        curses.curs_set(False)
+        for coroutine in coroutines.copy():
+            try:
+                coroutine.send(None)
+                curses.curs_set(False)
+                time.sleep(0.2)
+            except StopIteration:
+                coroutines.remove(coroutine)
+            if not coroutines:
+                break
         canvas.refresh()
-    time.sleep(5)
 
 
 if __name__ == '__main__':
