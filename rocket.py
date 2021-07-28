@@ -1,5 +1,6 @@
 import asyncio
 import curses
+import random
 import time
 
 
@@ -23,9 +24,10 @@ async def blink(canvas, row, column, symbol='*'):
 
 
 def draw(canvas):
-    row, column = (5, 20)
+    stars_count = 100
     canvas.border()
-    coroutines = [blink(canvas, row, column + index) for index in range(5)]
+
+    coroutines = [blink(canvas, *scatter_stars()) for _ in range(stars_count)]
     while True:
         for coroutine in coroutines.copy():
             try:
@@ -39,6 +41,16 @@ def draw(canvas):
         canvas.refresh()
 
 
+def scatter_stars():
+    screen = curses.initscr()
+    rows, columns = screen.getmaxyx()
+    row = random.randint(1, rows - 1)
+    column = random.randint(1, columns - 1)
+    symbol = random.choice('+*.:')
+    return row, column, symbol
+
+
 if __name__ == '__main__':
+
     curses.update_lines_cols()
     curses.wrapper(draw)
