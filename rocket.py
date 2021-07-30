@@ -24,6 +24,35 @@ async def blink(canvas, row, column, symbol='*'):
             await asyncio.sleep(0)
 
 
+async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
+    """Display animation of gun shot, direction and speed can be specified."""
+    row, column = start_row, start_column
+
+    canvas.addstr(round(row), round(column), '*')
+    await asyncio.sleep(0)
+
+    canvas.addstr(round(row), round(column), 'O')
+    await asyncio.sleep(0)
+    canvas.addstr(round(row), round(column), ' ')
+
+    row += rows_speed
+    column += columns_speed
+
+    symbol = '-' if columns_speed else '|'
+
+    rows, columns = canvas.getmaxyx()
+    max_row, max_column = rows - 1, columns - 1
+
+    curses.beep()
+
+    while 0 < row < max_row and 0 < column < max_column:
+        canvas.addstr(round(row), round(column), symbol)
+        await asyncio.sleep(0)
+        canvas.addstr(round(row), round(column), ' ')
+        row += rows_speed
+        column += columns_speed
+
+
 def draw_stars(coroutines, canvas, timer):
     for coroutine in coroutines:
         coroutine.send(None)
@@ -33,24 +62,36 @@ def draw_stars(coroutines, canvas, timer):
 
 
 def draw(canvas):
+    rows, columns = get_screen_size()
+    fires = [fire(canvas, rows - 2, round(columns / 2))]
+    star_coordinates = scatter_stars(rows, columns)
+
     canvas.border()
-    coordinates = scatter_stars()
 
     coroutines = [
-        blink(canvas, *coordinate) for coordinate in coordinates
+        blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
     draw_stars(coroutines, canvas, timer=0)
     while True:
         stars_to_flicker = randint(1, len(coroutines))
         flickering_stars = choices(coroutines, k=stars_to_flicker)
         draw_stars(flickering_stars, canvas, timer=0.1)
+        try:
+            for coroutine in fires:
+                coroutine.send(None)
+        except StopIteration:
+            fires.remove(coroutine)
+        canvas.refresh()
 
 
-def scatter_stars():
+def get_screen_size():
+    screen = curses.initscr()
+    return screen.getmaxyx()
+
+
+def scatter_stars(rows, columns):
     stars_ratio = 50
 
-    screen = curses.initscr()
-    rows, columns = screen.getmaxyx()
     stars_count = int(rows * columns / stars_ratio)
 
     coordinates = {(randint(2, rows - 2), randint(2, columns - 2))
