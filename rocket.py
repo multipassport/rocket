@@ -1,7 +1,8 @@
 import asyncio
 import curses
-import random
 import time
+
+from random import randint, choice, choices
 
 
 async def blink(canvas, row, column, symbol='*'):
@@ -23,34 +24,42 @@ async def blink(canvas, row, column, symbol='*'):
             await asyncio.sleep(0)
 
 
-def draw(canvas):
-    stars_count = 100
-    canvas.border()
+def draw_stars(coroutines, canvas, timer):
+    for coroutine in coroutines:
+        coroutine.send(None)
+        curses.curs_set(False)
+    canvas.refresh()
+    time.sleep(timer)
 
-    coroutines = [blink(canvas, *scatter_stars()) for _ in range(stars_count)]
+
+def draw(canvas):
+    canvas.border()
+    coordinates = scatter_stars()
+
+    coroutines = [
+        blink(canvas, *coordinate) for coordinate in coordinates
+    ]
+    draw_stars(coroutines, canvas, timer=0)
     while True:
-        for coroutine in coroutines.copy():
-            try:
-                coroutine.send(None)
-                curses.curs_set(False)
-            except StopIteration:
-                coroutines.remove(coroutine)
-            if not coroutines:
-                break
-        time.sleep(0.1)
-        canvas.refresh()
+        stars_to_flicker = randint(1, len(coroutines))
+        flickering_stars = choices(coroutines, k=stars_to_flicker)
+        draw_stars(flickering_stars, canvas, timer=0.1)
 
 
 def scatter_stars():
+    stars_ratio = 50
+
     screen = curses.initscr()
     rows, columns = screen.getmaxyx()
-    row = random.randint(1, rows - 1)
-    column = random.randint(1, columns - 1)
-    symbol = random.choice('+*.:')
-    return row, column, symbol
+    stars_count = int(rows * columns / stars_ratio)
+
+    coordinates = {(randint(2, rows - 2), randint(2, columns - 2))
+                      for _ in range(stars_count)}
+
+    for coordinate in coordinates:
+        yield *coordinate, choice('+*.:')
 
 
 if __name__ == '__main__':
-
     curses.update_lines_cols()
     curses.wrapper(draw)
