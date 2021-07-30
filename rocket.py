@@ -1,7 +1,7 @@
 import curses
 import time
 
-from async_tools import blink, fire, animate_spaceship
+from async_tools import blink, animate_spaceship
 from curses_tools import get_screen_size
 from random import randint, choice, choices
 
@@ -22,7 +22,7 @@ def draw(canvas):
     star_coordinates = scatter_stars(rows, columns)
     starship_frames = [
         read_animation('animations/rocket_frame_1.txt'),
-        read_animation('animations/rocket_frame_2.txt')
+        read_animation('animations/rocket_frame_2.txt'),
     ]
     spaceships = [
         animate_spaceship(

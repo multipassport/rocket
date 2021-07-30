@@ -77,4 +77,3 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
             current_column = 1
         if current_column > (max_width := screen_width - ship_width - 1):
             current_column = max_width
-
