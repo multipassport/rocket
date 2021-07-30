@@ -2,7 +2,7 @@ import asyncio
 import curses
 import time
 
-from curses_tools import draw_frame
+from curses_tools import draw_frame, read_controls
 from itertools import cycle
 from random import randint, choice, choices
 
@@ -55,17 +55,20 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         column += columns_speed
 
 
-async def animate_spaceship(canvas, row, column, frames):
+async def animate_spaceship(canvas, row, column, frames, speed=5):
+    current_row, current_column = row, column
+    canvas.nodelay(True)
     for frame in cycle(frames):
-        draw_frame(canvas, row, column, frame)
+        draw_frame(canvas, current_row, current_column, frame)
         canvas.refresh()
         await asyncio.sleep(0)
+        draw_frame(canvas, current_row, current_column, frame, negative=True)
+        rows_direction, columns_direction, space_pressed = read_controls(canvas)
+        current_row += rows_direction * speed
+        current_column += columns_direction * speed
 
-        draw_frame(canvas, row, column, frame, negative=True)
-        await asyncio.sleep(0)
 
-
-def draw_stars(coroutines, canvas, timer):
+def cycle_coroutines(coroutines, canvas, timer):
     try:
         for coroutine in coroutines.copy():
             coroutine.send(None)
@@ -94,14 +97,14 @@ def draw(canvas):
     coroutines = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
-    draw_stars(coroutines, canvas, timer=0)
+    cycle_coroutines(coroutines, canvas, timer=0)
     while True:
         canvas.border()
         stars_to_flicker = randint(1, len(coroutines))
         flickering_stars = choices(coroutines, k=stars_to_flicker)
-        draw_stars(flickering_stars, canvas, timer=0.1)
-        draw_stars(spaceships, canvas, timer=0)
-        draw_stars(fires, canvas, timer=0)
+        cycle_coroutines(flickering_stars, canvas, timer=0.1)
+        cycle_coroutines(spaceships, canvas, timer=0)
+        cycle_coroutines(fires, canvas, timer=0)
 
 
 def get_screen_size():
