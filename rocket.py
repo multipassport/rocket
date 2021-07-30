@@ -19,7 +19,6 @@ def cycle_coroutines(coroutines, canvas, timer):
 
 def draw(canvas):
     rows, columns = get_screen_size()
-    fires = [fire(canvas, rows - 2, round(columns / 2))]
     star_coordinates = scatter_stars(rows, columns)
     starship_frames = [
         read_animation('animations/rocket_frame_1.txt'),
@@ -42,7 +41,6 @@ def draw(canvas):
         flickering_stars = choices(coroutines, k=stars_to_flicker)
         cycle_coroutines(flickering_stars, canvas, timer=0.1)
         cycle_coroutines(spaceships, canvas, timer=0)
-        cycle_coroutines(fires, canvas, timer=0)
 
 
 def scatter_stars(rows, columns):
@@ -51,7 +49,7 @@ def scatter_stars(rows, columns):
     stars_count = int(rows * columns / stars_ratio)
 
     coordinates = {(randint(2, rows - 2), randint(2, columns - 2))
-                      for _ in range(stars_count)}
+                   for _ in range(stars_count)}
 
     for coordinate in coordinates:
         yield *coordinate, choice('+*.:')
