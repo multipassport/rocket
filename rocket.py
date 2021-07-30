@@ -80,8 +80,16 @@ def draw(canvas):
     rows, columns = get_screen_size()
     fires = [fire(canvas, rows - 2, round(columns / 2))]
     star_coordinates = scatter_stars(rows, columns)
-    frames = ['a', 'b']
-    spaceships = [animate_spaceship(canvas, 50, 20, frames)]
+    starship_frames = [
+        read_animation('animations/rocket_frame_1.txt'),
+        read_animation('animations/rocket_frame_2.txt')
+    ]
+    spaceships = [
+        animate_spaceship(
+            canvas, round(rows / 2),
+            round(columns / 2),
+            starship_frames,
+        )]
 
     coroutines = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
@@ -111,6 +119,11 @@ def scatter_stars(rows, columns):
 
     for coordinate in coordinates:
         yield *coordinate, choice('+*.:')
+
+
+def read_animation(filepath):
+    with open(filepath, 'r', encoding='utf-8') as file:
+        return file.read()
 
 
 if __name__ == '__main__':
