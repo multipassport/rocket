@@ -66,22 +66,24 @@ def draw(canvas):
     fires = [fire(canvas, rows - 2, round(columns / 2))]
     star_coordinates = scatter_stars(rows, columns)
 
-    canvas.border()
+    
 
     coroutines = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
     draw_stars(coroutines, canvas, timer=0)
     while True:
+        canvas.border()
         stars_to_flicker = randint(1, len(coroutines))
         flickering_stars = choices(coroutines, k=stars_to_flicker)
         draw_stars(flickering_stars, canvas, timer=0.1)
         try:
             for coroutine in fires:
                 coroutine.send(None)
+                canvas.refresh()
         except StopIteration:
             fires.remove(coroutine)
-        canvas.refresh()
+
 
 
 def get_screen_size():
