@@ -2,7 +2,7 @@ import asyncio
 import curses
 import time
 
-from curses_tools import draw_frame, read_controls
+from curses_tools import draw_frame, read_controls, get_frame_size
 from itertools import cycle
 from random import randint, choice, choices
 
@@ -55,10 +55,13 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         column += columns_speed
 
 
-async def animate_spaceship(canvas, row, column, frames, speed=5):
+async def animate_spaceship(canvas, row, column, frames, speed=10):
     current_row, current_column = row, column
+    screen_height, screen_width = get_screen_size()
+
     canvas.nodelay(True)
     for frame in cycle(frames):
+        ship_length, ship_width = get_frame_size(frame)
         draw_frame(canvas, current_row, current_column, frame)
         canvas.refresh()
         await asyncio.sleep(0)
@@ -67,16 +70,26 @@ async def animate_spaceship(canvas, row, column, frames, speed=5):
         current_row += rows_direction * speed
         current_column += columns_direction * speed
 
+        if current_row < 1:
+            current_row = 1
+        if current_row > (max_row := screen_height - ship_length - 1):
+            current_row = max_row
+
+        if current_column < 1:
+            current_column = 1
+        if current_column > (max_width := screen_width - ship_width - 1):
+            current_column = max_width
+
 
 def cycle_coroutines(coroutines, canvas, timer):
-    try:
-        for coroutine in coroutines.copy():
+    for coroutine in coroutines.copy():
+        try:
             coroutine.send(None)
-            curses.curs_set(False)
-        canvas.refresh()
-        time.sleep(timer)
-    except StopIteration:
-        coroutines.remove(coroutine)
+        except StopIteration:
+            coroutines.remove(coroutine)
+        curses.curs_set(False)
+    canvas.refresh()
+    time.sleep(timer)
 
 
 def draw(canvas):
