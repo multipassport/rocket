@@ -1,3 +1,6 @@
+import curses
+
+
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
 RIGHT_KEY_CODE = 261
@@ -68,3 +71,8 @@ def get_frame_size(text):
     rows = len(lines)
     columns = max([len(line) for line in lines])
     return rows, columns
+
+
+def get_screen_size():
+    screen = curses.initscr()
+    return screen.getmaxyx()
