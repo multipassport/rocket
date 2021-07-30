@@ -13,6 +13,7 @@ def cycle_coroutines(coroutines, canvas, timer):
         except StopIteration:
             coroutines.remove(coroutine)
         curses.curs_set(False)
+
     canvas.refresh()
     time.sleep(timer)
 
@@ -20,6 +21,7 @@ def cycle_coroutines(coroutines, canvas, timer):
 def draw(canvas):
     rows, columns = get_screen_size()
     star_coordinates = scatter_stars(rows, columns)
+
     starship_frames = [
         read_animation('animations/rocket_frame_1.txt'),
         read_animation('animations/rocket_frame_2.txt'),
@@ -34,7 +36,9 @@ def draw(canvas):
     coroutines = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
+
     cycle_coroutines(coroutines, canvas, timer=0)
+
     while True:
         canvas.border()
         stars_to_flicker = randint(1, len(coroutines))
