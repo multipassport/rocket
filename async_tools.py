@@ -60,11 +60,13 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
     canvas.nodelay(True)
     for frame in cycle(frames):
         ship_length, ship_width = get_frame_size(frame)
+
         draw_frame(canvas, current_row, current_column, frame)
-        canvas.refresh()
         await asyncio.sleep(0)
+
         draw_frame(canvas, current_row, current_column, frame, negative=True)
         rows_direction, columns_direction, space_pressed = read_controls(canvas)
+
         current_row += rows_direction * speed
         current_column += columns_direction * speed
 

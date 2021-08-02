@@ -6,19 +6,16 @@ from curses_tools import get_screen_size
 from random import randint, choice, choices
 
 
-def cycle_coroutines(coroutines, canvas, timer):
+def cycle_coroutines(coroutines, canvas):
     for coroutine in coroutines.copy():
         try:
             coroutine.send(None)
         except StopIteration:
             coroutines.remove(coroutine)
-        curses.curs_set(False)
-
-    canvas.refresh()
-    time.sleep(timer)
 
 
 def draw(canvas):
+    curses.curs_set(False)
     rows, columns = get_screen_size()
     star_coordinates = scatter_stars(rows, columns)
 
@@ -37,19 +34,20 @@ def draw(canvas):
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
 
-    cycle_coroutines(coroutines, canvas, timer=0)
+    cycle_coroutines(coroutines, canvas)
 
     while True:
         canvas.border()
         stars_to_flicker = randint(1, len(coroutines))
         flickering_stars = choices(coroutines, k=stars_to_flicker)
-        cycle_coroutines(flickering_stars, canvas, timer=0.1)
-        cycle_coroutines(spaceships, canvas, timer=0)
+        cycle_coroutines(flickering_stars, canvas)
+        cycle_coroutines(spaceships, canvas)
+        canvas.refresh()
+        time.sleep(0.1)
 
 
 def scatter_stars(rows, columns):
     stars_ratio = 50
-
     stars_count = int(rows * columns / stars_ratio)
 
     coordinates = {(randint(2, rows - 2), randint(2, columns - 2))
