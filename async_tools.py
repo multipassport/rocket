@@ -81,7 +81,7 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
             current_column = max_width
 
 
-async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
 

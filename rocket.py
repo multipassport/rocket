@@ -1,9 +1,23 @@
+import asyncio
 import curses
 import time
 
-from async_tools import blink, animate_spaceship, fly_garbage
-from curses_tools import get_screen_size
+from async_tools import blink, animate_spaceship, send_garbage_fly
+from curses_tools import get_screen_size, draw_frame
 from random import randint, choice, choices
+
+
+garbage = []
+
+
+async def fill_orbit_with_garbage(canvas, garbage_frames, columns):
+    while True:
+        garbage_frame = choice(garbage_frames)
+        column = randint(1, columns)
+        for _ in range(randint(1, 10)):
+            await asyncio.sleep(0)
+        coroutine = send_garbage_fly(canvas, column, garbage_frame)
+        garbage.append(coroutine)
 
 
 def cycle_coroutines(coroutines, canvas):
@@ -40,20 +54,13 @@ def draw(canvas):
             starship_frames,
         )]
 
-    garbage = [
-        fly_garbage(
-            canvas,
-            column=10,
-            garbage_frame=garbage_frames[0]
-        )
-    ]
-
+    abc = fill_orbit_with_garbage(canvas, garbage_frames, columns)
+    garbage.append(abc)
     coroutines = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
 
-    cycle_coroutines(coroutines, canvas)
-
+    # cycle_coroutines(garbage, canvas)
     while True:
         canvas.border()
         stars_to_flicker = randint(1, len(coroutines))
