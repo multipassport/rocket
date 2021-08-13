@@ -1,7 +1,7 @@
 import curses
 import time
 
-from async_tools import blink, animate_spaceship
+from async_tools import blink, animate_spaceship, fly_garbage
 from curses_tools import get_screen_size
 from random import randint, choice, choices
 
@@ -23,12 +23,30 @@ def draw(canvas):
         read_animation('animations/rocket_frame_1.txt'),
         read_animation('animations/rocket_frame_2.txt'),
     ]
+
+    garbage_frames = [
+        read_animation('animations/garbage/trash_small.txt'),
+        read_animation('animations/garbage/trash_large.txt'),
+        read_animation('animations/garbage/trash_x1.txt'),
+        read_animation('animations/garbage/duck.txt'),
+        read_animation('animations/garbage/hubble.txt'),
+        read_animation('animations/garbage/lamp.txt'),
+    ]
+
     spaceships = [
         animate_spaceship(
             canvas, round(rows / 2),
             round(columns / 2),
             starship_frames,
         )]
+
+    garbage = [
+        fly_garbage(
+            canvas,
+            column=10,
+            garbage_frame=garbage_frames[0]
+        )
+    ]
 
     coroutines = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
@@ -42,6 +60,7 @@ def draw(canvas):
         flickering_stars = choices(coroutines, k=stars_to_flicker)
         cycle_coroutines(flickering_stars, canvas)
         cycle_coroutines(spaceships, canvas)
+        cycle_coroutines(garbage, canvas)
         canvas.refresh()
         time.sleep(0.1)
 
