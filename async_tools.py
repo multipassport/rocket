@@ -5,6 +5,8 @@ from curses_tools import draw_frame, read_controls, get_frame_size, get_screen_s
 from itertools import cycle
 from physics import update_speed
 
+from settings import garbage
+
 
 async def blink(canvas, row, column, symbol='*'):
     while True:
@@ -95,6 +97,10 @@ def move_ship(canvas, frame, row_speed, column_speed, current_row, current_colum
     row_speed, column_speed = update_speed(row_speed, column_speed, rows_direction, columns_direction)
     screen_height, screen_width = canvas.getmaxyx()
     ship_length, ship_width = get_frame_size(frame)
+    if space_pressed:
+        shot_column = current_column + ship_width / 2
+        shot = fire(canvas, current_row, shot_column)
+        garbage.append(shot)
     current_row += row_speed
     current_column += column_speed
 
