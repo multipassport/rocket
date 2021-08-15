@@ -5,7 +5,8 @@ from curses_tools import draw_frame, read_controls, get_frame_size, get_screen_s
 from itertools import cycle
 from physics import update_speed
 
-from settings import garbage
+from obstacles import Obstacle
+from settings import garbage, obstacles
 
 
 async def blink(canvas, row, column, symbol='*'):
@@ -80,11 +81,18 @@ async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
 
     row = 0
 
+    row_size, column_size = get_frame_size(garbage_frame)
+
     while row < rows_number:
-        draw_frame(canvas, row, column, garbage_frame)
-        await asyncio.sleep(0)
-        draw_frame(canvas, row, column, garbage_frame, negative=True)
-        row += speed
+        try:
+            obstacle = Obstacle(row, column, row_size, column_size)
+            obstacles.append(obstacle)
+            draw_frame(canvas, row, column, garbage_frame)
+            await asyncio.sleep(0)
+            draw_frame(canvas, row, column, garbage_frame, negative=True)
+            row += speed
+        finally:
+            obstacles.remove(obstacle)
 
 
 async def sleep(tics=1):
