@@ -47,11 +47,13 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
     while 0 < row < max_row and 0 < column < max_column:
         try:
-            obstacle = Obstacle(row, column)
+            obstacle = Obstacle(row, column, uid='shot')
             obstacles.append(obstacle)
+
             for object in obstacles[:-1]:
                 if obstacle.has_collision(object.row, object.column, object.rows_size, object.columns_size):
                     return None
+
             canvas.addstr(round(row), round(column), symbol)
             await asyncio.sleep(0)
             canvas.addstr(round(row), round(column), ' ')
@@ -96,6 +98,11 @@ async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
         try:
             obstacle = Obstacle(row, column, row_size, column_size)
             obstacles.append(obstacle)
+
+            # shot_obstacle = Obstacle(uid='shot')
+            for object in obstacles[:-1]:
+                if obstacle.has_collision(object.row, object.column, object.rows_size, object.columns_size):
+                    return None
 
             draw_frame(canvas, row, column, garbage_frame)
             await asyncio.sleep(0)
