@@ -7,7 +7,7 @@ from physics import update_speed
 
 from explosion import explode
 from obstacles import Obstacle
-from settings import garbage, obstacles
+from settings import garbage, obstacles, year
 
 
 async def blink(canvas, row, column, symbol='*'):
@@ -136,6 +136,15 @@ async def show_game_over_caption(canvas):
     caption = read_animation('animations/game_over.txt')
     while True:
         draw_frame(canvas, rows_number / 3, columns_number / 3, caption)
+        await asyncio.sleep(0)
+
+
+async def pass_years(canvas, year):
+    rows_number, columns_number = canvas.getmaxyx()
+
+    while True:
+        draw_frame(canvas, rows_number - 1, columns_number - 10, str(year))
+        year += 1
         await asyncio.sleep(0)
 
 

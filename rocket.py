@@ -2,11 +2,11 @@ import asyncio
 import curses
 import time
 
-from async_tools import blink, animate_spaceship, send_garbage_fly, sleep
+from async_tools import blink, animate_spaceship, send_garbage_fly, sleep, pass_years
 from curses_tools import get_screen_size, draw_frame
 from obstacles import show_obstacles
 from random import randint, choice, choices
-from settings import garbage, obstacles
+from settings import garbage, obstacles, year
 
 
 async def fill_orbit_with_garbage(canvas, garbage_frames, columns):
@@ -55,6 +55,7 @@ def draw(canvas):
     abc = fill_orbit_with_garbage(canvas, garbage_frames, columns)
     garbage.append(abc)
     garbage.append(show_obstacles(canvas, obstacles))
+    garbage.append(pass_years(canvas, year))
     coroutines = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
