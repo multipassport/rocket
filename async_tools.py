@@ -5,6 +5,7 @@ from curses_tools import draw_frame, read_controls, get_frame_size, get_screen_s
 from itertools import cycle
 from physics import update_speed
 
+from explosion import explode
 from obstacles import Obstacle
 from settings import garbage, obstacles
 
@@ -102,6 +103,7 @@ async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
             # shot_obstacle = Obstacle(uid='shot')
             for object in obstacles[:-1]:
                 if obstacle.has_collision(object.row, object.column, object.rows_size, object.columns_size):
+                    await explode(canvas, object.row, object.column)
                     return None
 
             draw_frame(canvas, row, column, garbage_frame)
