@@ -71,17 +71,28 @@ async def animate_spaceship(canvas, row, column, frames, row_speed=0, column_spe
 
     canvas.nodelay(True)
     for frame in cycle(frames):
-        ship_length, ship_width = get_frame_size(frame)
-        current_row, current_column, row_speed, column_speed = move_ship(
-            canvas, frame, row_speed, column_speed, current_row, current_column
-        )
-        draw_frame(canvas, current_row, current_column, frame)
-        await asyncio.sleep(0)
 
-        draw_frame(canvas, current_row, current_column, frame, negative=True)
-        current_row, current_column, row_speed, column_speed = move_ship(
-            canvas, frame, row_speed, column_speed, current_row, current_column
-        )
+        try:
+            ship_length, ship_width = get_frame_size(frame)
+            obstacle = Obstacle(current_row, current_column, ship_width, ship_length)
+            obstacles.append(obstacle)
+
+            for object in obstacles[:-1]:
+                if obstacle.has_collision(object.row, object.column, object.rows_size, object.columns_size):
+                    await show_game_over_caption(canvas)
+
+            current_row, current_column, row_speed, column_speed = move_ship(
+                canvas, frame, row_speed, column_speed, current_row, current_column
+            )
+            draw_frame(canvas, current_row, current_column, frame)
+            await asyncio.sleep(0)
+
+            draw_frame(canvas, current_row, current_column, frame, negative=True)
+            current_row, current_column, row_speed, column_speed = move_ship(
+                canvas, frame, row_speed, column_speed, current_row, current_column
+            )
+        finally:
+            obstacles.remove(obstacle)
 
 
 async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
@@ -114,6 +125,20 @@ async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
             obstacles.remove(obstacle)
 
 
+def read_animation(filepath):
+    with open(filepath, 'r', encoding='utf-8') as file:
+        return file.read()
+
+
+async def show_game_over_caption(canvas):
+    rows_number, columns_number = canvas.getmaxyx()
+
+    caption = read_animation('animations/game_over.txt')
+    while True:
+        draw_frame(canvas, rows_number / 3, columns_number / 3, caption)
+        await asyncio.sleep(0)
+
+
 async def sleep(tics=1):
     for _ in range(tics):
         await asyncio.sleep(0)
@@ -124,6 +149,7 @@ def move_ship(canvas, frame, row_speed, column_speed, current_row, current_colum
     row_speed, column_speed = update_speed(row_speed, column_speed, rows_direction, columns_direction)
     screen_height, screen_width = canvas.getmaxyx()
     ship_length, ship_width = get_frame_size(frame)
+
     if space_pressed:
         shot_column = current_column + ship_width / 2
         shot = fire(canvas, current_row, shot_column)
@@ -141,3 +167,4 @@ def move_ship(canvas, frame, row_speed, column_speed, current_row, current_colum
     if current_column > (max_width := screen_width - ship_width - 1):
         current_column = max_width
     return current_row, current_column, row_speed, column_speed
+
