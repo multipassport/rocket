@@ -46,11 +46,20 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     curses.beep()
 
     while 0 < row < max_row and 0 < column < max_column:
-        canvas.addstr(round(row), round(column), symbol)
-        await asyncio.sleep(0)
-        canvas.addstr(round(row), round(column), ' ')
-        row += rows_speed
-        column += columns_speed
+        try:
+            obstacle = Obstacle(row, column)
+            obstacles.append(obstacle)
+            for object in obstacles[:-1]:
+                if obstacle.has_collision(object.row, object.column, object.rows_size, object.columns_size):
+                    return None
+            canvas.addstr(round(row), round(column), symbol)
+            await asyncio.sleep(0)
+            canvas.addstr(round(row), round(column), ' ')
+            row += rows_speed
+            column += columns_speed
+        finally:
+            if obstacle:
+                obstacles.remove(obstacle)
 
 
 async def animate_spaceship(canvas, row, column, frames, row_speed=0, column_speed=0):
@@ -87,6 +96,7 @@ async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
         try:
             obstacle = Obstacle(row, column, row_size, column_size)
             obstacles.append(obstacle)
+
             draw_frame(canvas, row, column, garbage_frame)
             await asyncio.sleep(0)
             draw_frame(canvas, row, column, garbage_frame, negative=True)
