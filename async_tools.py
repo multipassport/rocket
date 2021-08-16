@@ -1,15 +1,15 @@
 import asyncio
 import curses
-import time
 
-from curses_tools import draw_frame, read_controls, get_frame_size, get_screen_size, read_animation
-from itertools import cycle, count
+from itertools import cycle
 from random import choice, randint
-from physics import update_speed
 
+from curses_tools import (draw_frame, read_controls, get_frame_size,
+                          read_animation)
 from game_scenario import PHRASES, get_garbage_delay_tics
 from explosion import explode
 from obstacles import Obstacle
+from physics import update_speed
 from settings import coroutines, obstacles, year
 
 
@@ -70,7 +70,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
 async def animate_spaceship(canvas, row, column, frames, row_speed=0, column_speed=0):
     current_row, current_column = row, column
-    screen_height, screen_width = get_screen_size()
+    screen_height, screen_width = canvas.getmaxyx()
 
     canvas.nodelay(True)
     for frame in cycle(frames):
@@ -139,22 +139,39 @@ async def show_game_over_caption(canvas):
 
 async def pass_years(canvas):
     global year
+
+    tics_per_year = 15
     rows_number, columns_number = canvas.getmaxyx()
 
     while True:
-        box = canvas.derwin(rows_number - 3, columns_number - 30)
+        box = canvas.derwin(1, 40, rows_number - 2, columns_number - 41)
         box.clear()
 
         message = PHRASES.get(year, f'Year {year}')
 
         box.addstr(message)
         year += 1
-        await sleep(15)
+        await sleep(tics_per_year)
 
 
 async def sleep(tics=1):
     for _ in range(tics):
         await asyncio.sleep(0)
+
+
+async def fill_orbit_with_garbage(canvas, garbage_frames, columns):
+    garbage_appearing_year = 1961
+
+    while True:
+        if year < garbage_appearing_year:
+            await asyncio.sleep(0)
+            continue
+        delay = get_garbage_delay_tics(year)
+        garbage_frame = choice(garbage_frames)
+        column = randint(1, columns)
+        await sleep(delay)
+        coroutine = send_garbage_fly(canvas, column, garbage_frame)
+        coroutines.append(coroutine)
 
 
 def move_ship(canvas, frame, row_speed, column_speed, current_row, current_column):
@@ -182,18 +199,3 @@ def move_ship(canvas, frame, row_speed, column_speed, current_row, current_colum
     if current_column > (max_width := screen_width - ship_width - 1):
         current_column = max_width
     return current_row, current_column, row_speed, column_speed
-
-
-async def fill_orbit_with_garbage(canvas, garbage_frames, columns):
-    garbage_appearing_year = 1961
-
-    while True:
-        if year < garbage_appearing_year:
-            await asyncio.sleep(0)
-            continue
-        delay = get_garbage_delay_tics(year)
-        garbage_frame = choice(garbage_frames)
-        column = randint(1, columns)
-        await sleep(delay)
-        coroutine = send_garbage_fly(canvas, column, garbage_frame)
-        coroutines.append(coroutine)

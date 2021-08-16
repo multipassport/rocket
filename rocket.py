@@ -1,14 +1,12 @@
-import asyncio
 import curses
 import time
 
-from async_tools import blink, animate_spaceship, send_garbage_fly, sleep, pass_years, fill_orbit_with_garbage
-from curses_tools import get_screen_size, draw_frame
-from obstacles import show_obstacles
 from random import randint, choice, choices
-from settings import coroutines, obstacles, year
 
-
+from async_tools import blink, animate_spaceship, pass_years, fill_orbit_with_garbage
+from curses_tools import read_animation
+from obstacles import show_obstacles
+from settings import coroutines, obstacles
 
 
 def cycle_coroutines(coroutines, canvas):
@@ -20,8 +18,10 @@ def cycle_coroutines(coroutines, canvas):
 
 
 def draw(canvas):
+    tic_length = 0.1
+
     curses.curs_set(False)
-    rows, columns = get_screen_size()
+    rows, columns = canvas.getmaxyx()
     star_coordinates = scatter_stars(rows, columns)
 
     starship_frames = [
@@ -38,35 +38,34 @@ def draw(canvas):
         read_animation('animations/garbage/lamp.txt'),
     ]
 
-    spaceships = [
-        animate_spaceship(
-            canvas, round(rows / 2),
-            round(columns / 2),
-            starship_frames,
-        )]
+    spaceships = animate_spaceship(
+        canvas,
+        round(rows / 2),
+        round(columns / 2),
+        starship_frames,
+    )
+
+    stars = [
+        blink(canvas, *coordinate) for coordinate in star_coordinates
+    ]
 
     garbage = fill_orbit_with_garbage(canvas, garbage_frames, columns)
     coroutines.append(show_obstacles(canvas, obstacles))
     coroutines.append(pass_years(canvas))
     coroutines.append(garbage)
-    stars = [
-        blink(canvas, *coordinate) for coordinate in star_coordinates
-    ]
-    coroutines.extend(spaceships)
+    coroutines.append(spaceships)
     coroutines.extend(stars)
-    # stars_to_flicker = (len(stars) // 3)
-    # flickering_stars = choices(stars, k=stars_to_flicker)
-    # coroutines.extend(flickering_stars)
+
     while True:
         canvas.border()
+
         stars_to_flicker = randint(1, len(stars))
         flickering_stars = choices(stars, k=stars_to_flicker)
-        # coroutines.extend(flickering_stars)
+
         cycle_coroutines(flickering_stars, canvas)
-        # cycle_coroutines(spaceships, canvas)
         cycle_coroutines(coroutines, canvas)
         canvas.refresh()
-        time.sleep(0.1)
+        time.sleep(tic_length)
 
 
 def scatter_stars(rows, columns):
@@ -78,11 +77,6 @@ def scatter_stars(rows, columns):
 
     for coordinate in coordinates:
         yield *coordinate, choice('+*.:')
-
-
-def read_animation(filepath):
-    with open(filepath, 'r', encoding='utf-8') as file:
-        return file.read()
 
 
 if __name__ == '__main__':

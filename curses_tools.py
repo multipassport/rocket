@@ -1,6 +1,3 @@
-import curses
-
-
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
 RIGHT_KEY_CODE = 261
@@ -73,12 +70,6 @@ def get_frame_size(text):
     return rows, columns
 
 
-def get_screen_size():
-    screen = curses.initscr()
-    return screen.getmaxyx()
-
-
 def read_animation(filepath):
     with open(filepath, 'r', encoding='utf-8') as file:
         return file.read()
-
