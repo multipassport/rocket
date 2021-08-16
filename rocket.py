@@ -1,20 +1,20 @@
 import curses
+import os
 import time
 
 from random import randint, choice, choices
 
 from async_tools import blink, animate_spaceship, pass_years, fill_orbit_with_garbage
 from curses_tools import read_animation
-from obstacles import show_obstacles
-from settings import coroutines, obstacles
+from settings import coroutines
 
 
-def cycle_coroutines(coroutines, canvas):
-    for coroutine in coroutines.copy():
+def cycle_coroutines(cycled_coroutines, canvas):
+    for coroutine in cycled_coroutines.copy():
         try:
             coroutine.send(None)
         except StopIteration:
-            coroutines.remove(coroutine)
+            cycled_coroutines.remove(coroutine)
 
 
 def draw(canvas):
@@ -23,19 +23,17 @@ def draw(canvas):
     curses.curs_set(False)
     rows, columns = canvas.getmaxyx()
     star_coordinates = scatter_stars(rows, columns)
+    rocket_frames_folder = './animations/rocket'
+    garbage_frames_folder = './animations/garbage'
 
     starship_frames = [
-        read_animation('animations/rocket_frame_1.txt'),
-        read_animation('animations/rocket_frame_2.txt'),
+        read_animation(os.path.join(rocket_frames_folder, filepath))
+        for filepath in os.listdir(rocket_frames_folder)
     ]
 
     garbage_frames = [
-        read_animation('animations/garbage/trash_small.txt'),
-        read_animation('animations/garbage/trash_large.txt'),
-        read_animation('animations/garbage/trash_x1.txt'),
-        read_animation('animations/garbage/duck.txt'),
-        read_animation('animations/garbage/hubble.txt'),
-        read_animation('animations/garbage/lamp.txt'),
+        read_animation(os.path.join(garbage_frames_folder, filepath))
+        for filepath in os.listdir(garbage_frames_folder)
     ]
 
     spaceships = animate_spaceship(
@@ -49,10 +47,8 @@ def draw(canvas):
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
 
-    garbage = fill_orbit_with_garbage(canvas, garbage_frames, columns)
-    coroutines.append(show_obstacles(canvas, obstacles))
+    coroutines.append(fill_orbit_with_garbage(canvas, garbage_frames, columns))
     coroutines.append(pass_years(canvas))
-    coroutines.append(garbage)
     coroutines.append(spaceships)
     coroutines.extend(stars)
 
