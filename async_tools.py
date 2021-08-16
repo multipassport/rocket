@@ -6,8 +6,8 @@ from random import choice, randint
 
 from curses_tools import (draw_frame, read_controls, get_frame_size,
                           read_animation)
-from game_scenario import PHRASES, get_garbage_delay_tics
 from explosion import explode
+from game_scenario import PHRASES, get_garbage_delay_tics
 from obstacles import Obstacle
 from physics import update_speed
 from settings import coroutines, obstacles, year
@@ -85,14 +85,14 @@ async def animate_spaceship(canvas, row, column, frames, row_speed=0, column_spe
                     await show_game_over_caption(canvas)
 
             current_row, current_column, row_speed, column_speed = move_ship(
-                canvas, frame, row_speed, column_speed, current_row, current_column
+                canvas, frame, current_row, current_column, row_speed, column_speed
             )
             draw_frame(canvas, current_row, current_column, frame)
             await asyncio.sleep(0)
 
             draw_frame(canvas, current_row, current_column, frame, negative=True)
             current_row, current_column, row_speed, column_speed = move_ship(
-                canvas, frame, row_speed, column_speed, current_row, current_column
+                canvas, frame, current_row, current_column, row_speed, column_speed
             )
         finally:
             obstacles.remove(obstacle)
@@ -114,7 +114,6 @@ async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
             obstacle = Obstacle(row, column, row_size, column_size)
             obstacles.append(obstacle)
 
-            # shot_obstacle = Obstacle(uid='shot')
             for object in obstacles[:-1]:
                 if obstacle.has_collision(object.row, object.column, object.rows_size, object.columns_size):
                     await explode(canvas, object.row, object.column)
@@ -174,7 +173,7 @@ async def fill_orbit_with_garbage(canvas, garbage_frames, columns):
         coroutines.append(coroutine)
 
 
-def move_ship(canvas, frame, row_speed, column_speed, current_row, current_column):
+def move_ship(canvas, frame, current_row, current_column, row_speed, column_speed):
     rows_direction, columns_direction, space_pressed = read_controls(canvas)
     row_speed, column_speed = update_speed(row_speed, column_speed, rows_direction, columns_direction)
     screen_height, screen_width = canvas.getmaxyx()
@@ -184,7 +183,7 @@ def move_ship(canvas, frame, row_speed, column_speed, current_row, current_colum
 
     if space_pressed and (year >= getting_gun_year):
         shot_column = current_column + ship_width / 2
-        shot = fire(canvas, current_row, shot_column)
+        shot = fire(canvas, current_row, shot_column, rows_speed=-1)
         coroutines.append(shot)
     current_row += row_speed
     current_column += column_speed
