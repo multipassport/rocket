@@ -149,8 +149,8 @@ async def pass_years(canvas):
         message = PHRASES.get(year, f'Year {year}')
 
         box.addstr(message)
-        year += 1
         await sleep(tics_per_year)
+        year += 1
 
 
 async def sleep(tics=1):
