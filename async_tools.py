@@ -1,13 +1,16 @@
 import asyncio
 import curses
+import time
 
-from curses_tools import draw_frame, read_controls, get_frame_size, get_screen_size
-from itertools import cycle
+from curses_tools import draw_frame, read_controls, get_frame_size, get_screen_size, read_animation
+from itertools import cycle, count
+from random import choice, randint
 from physics import update_speed
 
+from game_scenario import PHRASES, get_garbage_delay_tics
 from explosion import explode
 from obstacles import Obstacle
-from settings import garbage, obstacles, year
+from settings import coroutines, obstacles, year
 
 
 async def blink(canvas, row, column, symbol='*'):
@@ -74,7 +77,7 @@ async def animate_spaceship(canvas, row, column, frames, row_speed=0, column_spe
 
         try:
             ship_length, ship_width = get_frame_size(frame)
-            obstacle = Obstacle(current_row, current_column, ship_width, ship_length)
+            obstacle = Obstacle(current_row, current_column, ship_length - 4, ship_width)
             obstacles.append(obstacle)
 
             for object in obstacles[:-1]:
@@ -96,7 +99,7 @@ async def animate_spaceship(canvas, row, column, frames, row_speed=0, column_spe
 
 
 async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
-    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    """Animate coroutines, flying from top to bottom. Сolumn position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
 
     column = max(column, 0)
@@ -125,11 +128,6 @@ async def send_garbage_fly(canvas, column, garbage_frame, speed=0.5):
             obstacles.remove(obstacle)
 
 
-def read_animation(filepath):
-    with open(filepath, 'r', encoding='utf-8') as file:
-        return file.read()
-
-
 async def show_game_over_caption(canvas):
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -139,13 +137,19 @@ async def show_game_over_caption(canvas):
         await asyncio.sleep(0)
 
 
-async def pass_years(canvas, year):
+async def pass_years(canvas):
+    global year
     rows_number, columns_number = canvas.getmaxyx()
 
     while True:
-        draw_frame(canvas, rows_number - 1, columns_number - 10, str(year))
+        box = canvas.derwin(rows_number - 3, columns_number - 30)
+        box.clear()
+
+        message = PHRASES.get(year, f'Year {year}')
+
+        box.addstr(message)
         year += 1
-        await asyncio.sleep(0)
+        await sleep(15)
 
 
 async def sleep(tics=1):
@@ -159,10 +163,12 @@ def move_ship(canvas, frame, row_speed, column_speed, current_row, current_colum
     screen_height, screen_width = canvas.getmaxyx()
     ship_length, ship_width = get_frame_size(frame)
 
-    if space_pressed:
+    getting_gun_year = 2020
+
+    if space_pressed and (year >= getting_gun_year):
         shot_column = current_column + ship_width / 2
         shot = fire(canvas, current_row, shot_column)
-        garbage.append(shot)
+        coroutines.append(shot)
     current_row += row_speed
     current_column += column_speed
 
@@ -177,3 +183,17 @@ def move_ship(canvas, frame, row_speed, column_speed, current_row, current_colum
         current_column = max_width
     return current_row, current_column, row_speed, column_speed
 
+
+async def fill_orbit_with_garbage(canvas, garbage_frames, columns):
+    garbage_appearing_year = 1961
+
+    while True:
+        if year < garbage_appearing_year:
+            await asyncio.sleep(0)
+            continue
+        delay = get_garbage_delay_tics(year)
+        garbage_frame = choice(garbage_frames)
+        column = randint(1, columns)
+        await sleep(delay)
+        coroutine = send_garbage_fly(canvas, column, garbage_frame)
+        coroutines.append(coroutine)

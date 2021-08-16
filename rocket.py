@@ -2,20 +2,13 @@ import asyncio
 import curses
 import time
 
-from async_tools import blink, animate_spaceship, send_garbage_fly, sleep, pass_years
+from async_tools import blink, animate_spaceship, send_garbage_fly, sleep, pass_years, fill_orbit_with_garbage
 from curses_tools import get_screen_size, draw_frame
 from obstacles import show_obstacles
 from random import randint, choice, choices
-from settings import garbage, obstacles, year
+from settings import coroutines, obstacles, year
 
 
-async def fill_orbit_with_garbage(canvas, garbage_frames, columns):
-    while True:
-        garbage_frame = choice(garbage_frames)
-        column = randint(1, columns)
-        await sleep(randint(1, 10))
-        coroutine = send_garbage_fly(canvas, column, garbage_frame)
-        garbage.append(coroutine)
 
 
 def cycle_coroutines(coroutines, canvas):
@@ -52,21 +45,26 @@ def draw(canvas):
             starship_frames,
         )]
 
-    abc = fill_orbit_with_garbage(canvas, garbage_frames, columns)
-    garbage.append(abc)
-    garbage.append(show_obstacles(canvas, obstacles))
-    garbage.append(pass_years(canvas, year))
-    coroutines = [
+    garbage = fill_orbit_with_garbage(canvas, garbage_frames, columns)
+    coroutines.append(show_obstacles(canvas, obstacles))
+    coroutines.append(pass_years(canvas))
+    coroutines.append(garbage)
+    stars = [
         blink(canvas, *coordinate) for coordinate in star_coordinates
     ]
-
+    coroutines.extend(spaceships)
+    coroutines.extend(stars)
+    # stars_to_flicker = (len(stars) // 3)
+    # flickering_stars = choices(stars, k=stars_to_flicker)
+    # coroutines.extend(flickering_stars)
     while True:
         canvas.border()
-        stars_to_flicker = randint(1, len(coroutines))
-        flickering_stars = choices(coroutines, k=stars_to_flicker)
+        stars_to_flicker = randint(1, len(stars))
+        flickering_stars = choices(stars, k=stars_to_flicker)
+        # coroutines.extend(flickering_stars)
         cycle_coroutines(flickering_stars, canvas)
-        cycle_coroutines(spaceships, canvas)
-        cycle_coroutines(garbage, canvas)
+        # cycle_coroutines(spaceships, canvas)
+        cycle_coroutines(coroutines, canvas)
         canvas.refresh()
         time.sleep(0.1)
 

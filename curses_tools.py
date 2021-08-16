@@ -76,3 +76,9 @@ def get_frame_size(text):
 def get_screen_size():
     screen = curses.initscr()
     return screen.getmaxyx()
+
+
+def read_animation(filepath):
+    with open(filepath, 'r', encoding='utf-8') as file:
+        return file.read()
+
